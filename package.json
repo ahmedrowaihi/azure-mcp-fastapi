@@ -1,10 +1,13 @@
 {
     "name": "@ahmedrowaihi/azure-mcp-fastmcp",
-    "version": "0.0.1",
-    "description": "Azure DevOps MCP Server for FastMCP integration",
-    "type": "module",
+    "version": "0.0.6",
     "bin": {
         "azure-mcp-fastmcp": "./dist/main.js"
+    },
+    "scripts": {
+        "build": "bun build main.ts --target node --outdir dist --minify",
+        "postbuild": "chmod +x dist/main.js",
+        "prepublishOnly": "bun run build && chmod +x dist/main.js"
     },
     "devDependencies": {
         "@types/bun": "latest",
@@ -17,10 +20,6 @@
     },
     "peerDependencies": {
         "typescript": "^5.0.0"
-    },
-    "scripts": {
-        "build": "bun build main.ts --target node --outdir dist --minify",
-        "dev": "bunx fastmcp inspect main.ts"
     },
     "publishConfig": {
         "access": "public"

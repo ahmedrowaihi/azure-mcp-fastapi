@@ -4,7 +4,7 @@ A Model Context Protocol (MCP) server that provides Azure DevOps integration thr
 
 ## 🚀 Features
 
--   **Standalone Executable**: No dependencies required when using npx
+-   **Direct npx Execution**: No dependencies required when using npx
 -   **Azure DevOps Integration**: Full access to Azure DevOps REST API
 -   **MCP Protocol**: Compatible with any MCP client
 -   **Multiple Tools**: Projects, Work Items, Teams, and Policies management
