@@ -4,10 +4,10 @@ A Model Context Protocol (MCP) server that provides Azure DevOps integration thr
 
 ## 🚀 Features
 
--   **Standalone Executable**: No dependencies required when using npx
--   **Azure DevOps Integration**: Full access to Azure DevOps REST API
--   **MCP Protocol**: Compatible with any MCP client
--   **Multiple Tools**: Projects, Work Items, Teams, and Policies management
+- **Standalone Executable**: No dependencies required when using npx
+- **Azure DevOps Integration**: Full access to Azure DevOps REST API
+- **MCP Protocol**: Compatible with any MCP client
+- **Multiple Tools**: Projects, Work Items, Teams, and Policies management
 
 ## 📦 Installation
 
@@ -87,35 +87,35 @@ export AZURE_PERSONAL_ACCESS_TOKEN="your_token"
 
 ### Project Tools
 
--   **`listProjects`**: List all Azure DevOps projects in your organization
+- **`listProjects`**: List all Azure DevOps projects in your organization
 
 ### Work Item Tools
 
--   **`listWorkItems`**: List work items by IDs
--   **`getWorkItemDetails`**: Get detailed information for a specific work item
--   **`createWorkItem`**: Create a new work item
--   **`updateWorkItem`**: Update an existing work item
--   **`listWorkItemTypes`**: List available work item types for a project
--   **`listWorkItemQueries`**: List work item queries for a project
+- **`listWorkItems`**: List work items by IDs
+- **`getWorkItemDetails`**: Get detailed information for a specific work item
+- **`createWorkItem`**: Create a new work item
+- **`updateWorkItem`**: Update an existing work item
+- **`listWorkItemTypes`**: List available work item types for a project
+- **`listWorkItemQueries`**: List work item queries for a project
 
 ### Team Tools
 
--   **`listTeams`**: List teams for a project
--   **`listTeamMembers`**: List team members for a specific team
+- **`listTeams`**: List teams for a project
+- **`listTeamMembers`**: List team members for a specific team
 
 ### Policy Tools
 
--   **`listPolicies`**: List branch policies for a project or repository
--   **`getPolicyDetails`**: Get detailed policy information by configuration ID
+- **`listPolicies`**: List branch policies for a project or repository
+- **`getPolicyDetails`**: Get detailed policy information by configuration ID
 
 ## 🔐 Azure DevOps Permissions
 
 Your Personal Access Token (PAT) needs the following permissions:
 
--   **Code**: Read (for repository access)
--   **Work Items**: Read & Write (for work item management)
--   **Project and Team**: Read (for project and team information)
--   **Policy**: Read (for branch policy access)
+- **Code**: Read (for repository access)
+- **Work Items**: Read & Write (for work item management)
+- **Project and Team**: Read (for project and team information)
+- **Policy**: Read (for branch policy access)
 
 ## 🚀 Usage Examples
 
@@ -132,16 +132,16 @@ If using an MCP client like Claude Desktop, add to your configuration:
 
 ```json
 {
-    "mcpServers": {
-        "azure-devops": {
-            "command": "npx",
-            "args": ["-y", "@ahmedrowaihi/azure-mcp-fastmcp"],
-            "env": {
-                "AZURE_ORG_URL": "https://dev.azure.com/yourorg",
-                "AZURE_PERSONAL_ACCESS_TOKEN": "your_token"
-            }
-        }
+  "mcpServers": {
+    "azure-devops": {
+      "command": "npx",
+      "args": ["-y", "@ahmedrowaihi/azure-mcp-fastmcp"],
+      "env": {
+        "AZURE_ORG_URL": "https://dev.azure.com/yourorg",
+        "AZURE_PERSONAL_ACCESS_TOKEN": "your_token"
+      }
     }
+  }
 }
 ```
 
@@ -149,8 +149,8 @@ If using an MCP client like Claude Desktop, add to your configuration:
 
 ### Prerequisites
 
--   [Bun](https://bun.sh) (JavaScript runtime)
--   Node.js 18+ (for compatibility)
+- [Bun](https://bun.sh) (JavaScript runtime)
+- Node.js 18+ (for compatibility)
 
 ### Development Commands
 

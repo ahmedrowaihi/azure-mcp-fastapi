@@ -1,7 +1,7 @@
-import type { TeamProjectReference } from 'azure-devops-node-api/interfaces/CoreInterfaces';
+import type { TeamProjectReference } from "azure-devops-node-api/interfaces/CoreInterfaces";
 
 export function formatProjectList(
-    projects: TeamProjectReference[],
+  projects: TeamProjectReference[]
 ): Partial<TeamProjectReference>[] {
-    return projects;
+  return projects;
 }
