@@ -21,7 +21,8 @@
   "scripts": {
     "build": "bun build main.ts --target node --outdir dist --minify",
     "dev": "bunx fastmcp inspect main.ts",
-    "start": "bun dist/main.js"
+    "start": "bun dist/main.js",
+    "prepublishOnly": "bun run build"
   },
   "publishConfig": {
     "access": "public"
