@@ -20,7 +20,8 @@
   },
   "scripts": {
     "build": "bun build main.ts --target node --outdir dist --minify",
-    "dev": "bunx fastmcp inspect main.ts"
+    "dev": "bunx fastmcp inspect main.ts",
+    "start": "bun dist/main.js"
   },
   "publishConfig": {
     "access": "public"
