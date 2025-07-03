@@ -97,16 +97,45 @@ export AZURE_PERSONAL_ACCESS_TOKEN="your_token"
 - **`updateWorkItem`**: Update an existing work item
 - **`listWorkItemTypes`**: List available work item types for a project
 - **`listWorkItemQueries`**: List work item queries for a project
+- **`bulkCreateWorkItems`**: Bulk create Epics, Features, User Stories, and Tasks (with parent/child relationships)
+- **`bulkUpdateWorkItems`**: Bulk update work items (assign, change state, set iteration, add comment, or custom field)
+- **`destroyWorkItems`**: Permanently delete (destroy) a list of work items
+- **`queryWorkItems`**: Query work items using WIQL (Work Item Query Language)
+- **`executeQuery`**: Execute a saved work item query by ID
+- **`assignWorkItem`**: Assign a work item to a team member
+- **`transitionWorkItem`**: Transition a work item to a new state
+- **`addComment`**: Add a comment to a work item
+- **`getComments`**: Get comments for a work item
+- **`linkWorkItems`**: Link an existing child work item to a parent by URL
+- **`unlinkWorkItems`**: Unlink a child work item from a parent by URL
+- **Formatting tools**: Improved output formatting for summaries, lists, and bulk operations
+
+### Iteration & Sprint Tools
+
+- **`listProjectIterations`**: List all project-level iteration nodes for a project
+- **`getTeamIterations`**: List all iterations (sprints) currently assigned to a team
+- **`createTeamIteration`**: Create a team iteration (sprint) for a project and team
+- **`deleteTeamIterations`**: Delete one or more team iterations by ID
+- **`assignToIteration`**: Assign a work item to a team iteration (sprint)
+- **`getIterationWorkItems`**: List all work items assigned to a specific team iteration
+- **`updateProjectIterationDates`**: Update the start and end dates for a project-level iteration node
+- **`getProjectIterationNodeById`**: Fetch a project-level iteration node by its numeric ID (for debugging)
 
 ### Team Tools
 
 - **`listTeams`**: List teams for a project
 - **`listTeamMembers`**: List team members for a specific team
+- **`getTeamCapacity`**: Get team capacity for an iteration
 
 ### Policy Tools
 
 - **`listPolicies`**: List branch policies for a project or repository
 - **`getPolicyDetails`**: Get detailed policy information by configuration ID
+
+### Profile Tools
+
+- **`getUserProfile`**: Get user profile by ID
+- **`getCurrentUserProfile`**: Get the user that the Azure DevOps API is called on behalf of
 
 ## 🔐 Azure DevOps Permissions
 
@@ -142,6 +171,47 @@ If using an MCP client like Claude Desktop, add to your configuration:
       }
     }
   }
+}
+```
+
+### Bulk Create Work Items
+
+```json
+{
+  "project": "MyProject",
+  "epics": [
+    {
+      "title": "Epic 1",
+      "features": [
+        {
+          "title": "Feature A",
+          "user_stories": [
+            {
+              "title": "Story 1",
+              "tasks": [{ "title": "Task X" }, { "title": "Task Y" }]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Assign Work Item to Iteration
+
+```json
+{
+  "id": 12345,
+  "iterationId": "MyProject\\Iteration 1"
+}
+```
+
+### Get User Profile
+
+```json
+{
+  "id": "user@domain.com"
 }
 ```
 
@@ -194,3 +264,10 @@ If you encounter any issues or have questions, please open an issue on GitHub.
 ---
 
 **Note**: This MCP server is designed to be a standalone executable that doesn't require installing dependencies when used with npx. All dependencies are bundled into the final executable for optimal user experience.
+
+---
+
+## ⚠️ Known Issues
+
+- **Iteration Node Update Limitation:**
+  Updating project-level iteration node dates (start/end) via the Azure DevOps SDK fails with "Iteration node not found" even when the node is confirmed to exist and is fetchable by ID. All tested path formats fail for update/fetch by path, but fetching by ID works. This may be an SDK bug, REST/SOAP mismatch, or permissions issue. If you encounter this, consider using the Azure DevOps REST API directly or check for updates to the SDK.

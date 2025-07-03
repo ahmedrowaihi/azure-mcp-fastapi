@@ -1,7 +1,10 @@
 import type { TeamMember } from "azure-devops-node-api/interfaces/common/VSSInterfaces";
 import type { WebApiTeam } from "azure-devops-node-api/interfaces/CoreInterfaces";
 
-export function formatTeamList(teams: WebApiTeam[]): Partial<WebApiTeam>[] {
+export function formatTeamList(
+  teams: WebApiTeam[] | null
+): Partial<WebApiTeam>[] {
+  if (!teams) return [];
   return teams.map((t) => ({
     id: t.id,
     identity: t.identity,
@@ -14,8 +17,9 @@ export function formatTeamList(teams: WebApiTeam[]): Partial<WebApiTeam>[] {
 }
 
 export function formatTeamMemberList(
-  members: TeamMember[]
+  members: TeamMember[] | null
 ): Partial<TeamMember>[] {
+  if (!members) return [];
   return members.map((m) => ({
     identity: {
       id: m.identity?.id,

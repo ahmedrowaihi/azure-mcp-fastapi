@@ -1,8 +1,9 @@
 import type { PolicyConfiguration } from "azure-devops-node-api/interfaces/PolicyInterfaces";
 
 export function formatPolicyList(
-  policies: PolicyConfiguration[]
+  policies: PolicyConfiguration[] | null
 ): Partial<PolicyConfiguration>[] {
+  if (!policies) return [];
   return policies.map((p) => ({
     id: p.id,
     type: p.type,
