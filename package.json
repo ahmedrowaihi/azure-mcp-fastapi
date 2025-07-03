@@ -1,6 +1,6 @@
 {
   "name": "@ahmedrowaihi/azure-mcp-fastmcp",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Azure DevOps MCP Server for FastMCP integration",
   "type": "module",
   "bin": {
