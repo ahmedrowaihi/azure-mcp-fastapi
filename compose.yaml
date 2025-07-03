@@ -1,0 +1,15 @@
+services:
+  azure-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: azure-mcp-fastmcp
+    environment:
+      NODE_ENV: production
+      # Required Azure DevOps credentials
+      AZURE_ORG_URL: ${AZURE_ORG_URL}
+      AZURE_PERSONAL_ACCESS_TOKEN: ${AZURE_PERSONAL_ACCESS_TOKEN}
+    # MCP servers communicate via stdio, not HTTP
+    # No ports needed as this is not a web server
+    stdin_open: true
+    tty: true
