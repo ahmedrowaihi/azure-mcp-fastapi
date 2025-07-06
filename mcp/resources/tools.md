@@ -74,3 +74,39 @@
 - **`team.list`**: List teams for a project
 - **`team.listMembers`**: List team members for a specific team
 - **`team.capacity`**: Get team capacity for an iteration
+
+## Wiki Tools
+
+- **`wiki.list`**: List all wikis in a project.
+
+  - **Parameters:** `{ "project": "MyProject" }` (optional)
+  - **Returns:** Array of wikis for the project.
+
+- **`wiki.get`**: Get details for a specific wiki by ID.
+
+  - **Parameters:** `{ "wikiId": "wiki-guid", "project": "MyProject" }` (`project` optional)
+  - **Returns:** Wiki details.
+
+- **`wiki.create`**: Create a new wiki in a project.
+
+  - **Parameters:** `{ "params": { ...wiki creation fields... }, "project": "MyProject" }`
+  - **Returns:** The created wiki.
+
+- **`wiki.update`**: Update a wiki's properties.
+
+  - **Parameters:** `{ "params": { ...wiki update fields... }, "wikiId": "wiki-guid", "project": "MyProject" }`
+  - **Returns:** The updated wiki.
+
+- **`wiki.delete`**: Delete a wiki by ID.
+
+  - **Parameters:** `{ "wikiId": "wiki-guid", "project": "MyProject" }` (`project` optional)
+  - **Returns:** Result of the delete operation.
+
+- **`wiki.page.list`**: List all pages in a wiki as a flat array.
+
+  - **Parameters:** `{ "project": "MyProject", "wikiId": "wiki-guid" }`
+  - **Returns:** Array of all pages (`WikiPageDetail`) in the wiki, always as a plain array.
+
+- **`wiki.page.get`**: Get the content of a wiki page as text.
+  - **Parameters:** `{ "project": "MyProject", "wikiId": "wiki-guid", "path": "/Page/Path" }`
+  - **Returns:** The page content as text.

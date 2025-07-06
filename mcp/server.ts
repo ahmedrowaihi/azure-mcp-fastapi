@@ -1,5 +1,6 @@
 import { registerProjectTools } from "@mcp/tools/project";
 import { registerTeamTools } from "@mcp/tools/team";
+import { registerWikiTools } from "@mcp/tools/wiki";
 import { registerWorkItemTools } from "@mcp/tools/workItem";
 import { FastMCP } from "fastmcp";
 
@@ -23,6 +24,7 @@ export function createServer({
   registerProjectTools(server, services.projectService);
   registerWorkItemTools(server, services.workItemService);
   registerTeamTools(server, services.teamService);
+  registerWikiTools(server, services.wikiService);
 
   // You can add more global tools here if needed
 
