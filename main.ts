@@ -3,8 +3,6 @@ import { createAzureConnection } from "./azure";
 import { provisionServices } from "./azure/services";
 import { createServer } from "./mcp";
 
-import type { TransportType } from "./mcp/types";
-
 if (!process.env.AZURE_ORG_URL) {
   throw new Error("AZURE_ORG_URL is not set");
 }

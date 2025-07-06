@@ -1,6 +1,6 @@
 # Azure MCP FastMCP Server
 
-A Model Context Protocol (MCP) server that provides Azure DevOps integration through a set of tools for managing projects, work items, teams, and policies.
+A Model Context Protocol (MCP) server that provides Azure DevOps integration through a set of tools for managing projects, work items, teams.
 
 ## 🚀 Features
 
@@ -127,16 +127,6 @@ export AZURE_PERSONAL_ACCESS_TOKEN="your_token"
 - **`listTeamMembers`**: List team members for a specific team
 - **`getTeamCapacity`**: Get team capacity for an iteration
 
-### Policy Tools
-
-- **`listPolicies`**: List branch policies for a project or repository
-- **`getPolicyDetails`**: Get detailed policy information by configuration ID
-
-### Profile Tools
-
-- **`getUserProfile`**: Get user profile by ID
-- **`getCurrentUserProfile`**: Get the user that the Azure DevOps API is called on behalf of
-
 ## 🔐 Azure DevOps Permissions
 
 Your Personal Access Token (PAT) needs the following permissions:
@@ -204,14 +194,6 @@ If using an MCP client like Claude Desktop, add to your configuration:
 {
   "id": 12345,
   "iterationId": "MyProject\\Iteration 1"
-}
-```
-
-### Get User Profile
-
-```json
-{
-  "id": "user@domain.com"
 }
 ```
 
