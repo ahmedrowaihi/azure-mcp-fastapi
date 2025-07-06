@@ -4,6 +4,7 @@ import { registerWorkItemTools } from "@mcp/tools/workItem";
 import { FastMCP } from "fastmcp";
 
 import type { provisionServices } from "../azure/services";
+import { registerResource } from "./resources/register-resource";
 
 export function createServer({
   services,
@@ -15,6 +16,8 @@ export function createServer({
     version: "1.0.0",
     instructions: "This is a MCP server for Azure DevOps",
   });
+
+  registerResource(server);
 
   // Register tools for each service
   registerProjectTools(server, services.projectService);

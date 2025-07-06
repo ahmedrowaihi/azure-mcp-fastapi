@@ -2,6 +2,36 @@
 
 A Model Context Protocol (MCP) server that provides Azure DevOps integration through a set of tools for managing projects, work items, teams.
 
+## Table of Contents
+
+- [Azure MCP FastMCP Server](#azure-mcp-fastmcp-server)
+  - [Table of Contents](#table-of-contents)
+  - [🚀 Features](#-features)
+  - [📦 Installation](#-installation)
+    - [Using npx (Recommended)](#using-npx-recommended)
+    - [Local Development](#local-development)
+  - [🔧 Configuration](#-configuration)
+    - [Environment Variables](#environment-variables)
+    - [Setting Environment Variables](#setting-environment-variables)
+      - [Method 1: Direct Environment Variables](#method-1-direct-environment-variables)
+      - [Method 2: Using .env File](#method-2-using-env-file)
+      - [Method 3: System Environment Variables](#method-3-system-environment-variables)
+  - [🛠️ Available Tools](#️-available-tools)
+  - [🔐 Azure DevOps Permissions](#-azure-devops-permissions)
+  - [🚀 Usage Examples](#-usage-examples)
+    - [Basic Usage](#basic-usage)
+    - [With MCP Client Configuration](#with-mcp-client-configuration)
+    - [Bulk Create Work Items](#bulk-create-work-items)
+    - [Assign Work Item to Iteration](#assign-work-item-to-iteration)
+  - [🛠️ Development](#️-development)
+    - [Prerequisites](#prerequisites)
+    - [Development Commands](#development-commands)
+    - [Project Structure](#project-structure)
+  - [📄 License](#-license)
+  - [🤝 Contributing](#-contributing)
+  - [📞 Support](#-support)
+  - [⚠️ Known Issues](#️-known-issues)
+
 ## 🚀 Features
 
 - **Standalone Executable**: No dependencies required when using npx
@@ -85,47 +115,7 @@ export AZURE_PERSONAL_ACCESS_TOKEN="your_token"
 
 ## 🛠️ Available Tools
 
-### Project Tools
-
-- **`listProjects`**: List all Azure DevOps projects in your organization
-
-### Work Item Tools
-
-- **`listWorkItems`**: List work items by IDs
-- **`getWorkItemDetails`**: Get detailed information for a specific work item
-- **`createWorkItem`**: Create a new work item
-- **`updateWorkItem`**: Update an existing work item
-- **`listWorkItemTypes`**: List available work item types for a project
-- **`listWorkItemQueries`**: List work item queries for a project
-- **`bulkCreateWorkItems`**: Bulk create Epics, Features, User Stories, and Tasks (with parent/child relationships)
-- **`bulkUpdateWorkItems`**: Bulk update work items (assign, change state, set iteration, add comment, or custom field)
-- **`destroyWorkItems`**: Permanently delete (destroy) a list of work items
-- **`queryWorkItems`**: Query work items using WIQL (Work Item Query Language)
-- **`executeQuery`**: Execute a saved work item query by ID
-- **`assignWorkItem`**: Assign a work item to a team member
-- **`transitionWorkItem`**: Transition a work item to a new state
-- **`addComment`**: Add a comment to a work item
-- **`getComments`**: Get comments for a work item
-- **`linkWorkItems`**: Link an existing child work item to a parent by URL
-- **`unlinkWorkItems`**: Unlink a child work item from a parent by URL
-- **Formatting tools**: Improved output formatting for summaries, lists, and bulk operations
-
-### Iteration & Sprint Tools
-
-- **`listProjectIterations`**: List all project-level iteration nodes for a project
-- **`getTeamIterations`**: List all iterations (sprints) currently assigned to a team
-- **`createTeamIteration`**: Create a team iteration (sprint) for a project and team
-- **`deleteTeamIterations`**: Delete one or more team iterations by ID
-- **`assignToIteration`**: Assign a work item to a team iteration (sprint)
-- **`getIterationWorkItems`**: List all work items assigned to a specific team iteration
-- **`updateProjectIterationDates`**: Update the start and end dates for a project-level iteration node
-- **`getProjectIterationNodeById`**: Fetch a project-level iteration node by its numeric ID (for debugging)
-
-### Team Tools
-
-- **`listTeams`**: List teams for a project
-- **`listTeamMembers`**: List team members for a specific team
-- **`getTeamCapacity`**: Get team capacity for an iteration
+- [Tools](./mcp/resources/tools.md)
 
 ## 🔐 Azure DevOps Permissions
 
@@ -169,16 +159,22 @@ If using an MCP client like Claude Desktop, add to your configuration:
 ```json
 {
   "project": "MyProject",
-  "epics": [
+  "items": [
     {
+      "type": "Epic",
       "title": "Epic 1",
-      "features": [
+      "children": [
         {
+          "type": "Feature",
           "title": "Feature A",
-          "user_stories": [
+          "children": [
             {
+              "type": "User Story",
               "title": "Story 1",
-              "tasks": [{ "title": "Task X" }, { "title": "Task Y" }]
+              "children": [
+                { "type": "Task", "title": "Task X" },
+                { "type": "Task", "title": "Task Y" }
+              ]
             }
           ]
         }

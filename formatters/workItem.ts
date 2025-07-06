@@ -1,17 +1,15 @@
 import type {
+  IterationWorkItems,
+  TeamCapacity,
+  TeamSettingsIteration,
+} from "azure-devops-node-api/interfaces/WorkInterfaces";
+import type {
   QueryHierarchyItem,
   WorkItem,
-  WorkItemType,
   WorkItemQueryResult,
   WorkItemStateColor,
-  Comment,
-  CommentList,
+  WorkItemType
 } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces";
-import type {
-  TeamSettingsIteration,
-  TeamCapacity,
-  IterationWorkItems,
-} from "azure-devops-node-api/interfaces/WorkInterfaces";
 
 export function formatWorkItemSummary(w: WorkItem): Partial<WorkItem> {
   return {
@@ -45,6 +43,23 @@ export function formatWorkItemTypeList(
     transitions: t.transitions,
     isDisabled: t.isDisabled,
   }));
+}
+
+export function formatWorkItemType(
+  workItemType: WorkItemType | null
+): Partial<WorkItemType> | null {
+  if (!workItemType) return null;
+  return {
+    name: workItemType.name,
+    description: workItemType.description,
+    fields: workItemType.fields?.map((f) => ({
+      name: f.name,
+      referenceName: f.referenceName,
+      description: f.helpText,
+      required: f.alwaysRequired,
+      allowedValues: f.allowedValues,
+    })),
+  };
 }
 
 export function formatWorkItemQueryList(
@@ -125,41 +140,6 @@ export function formatIterationWorkItems(
   };
 }
 
-export function formatCommentList(
-  comments: CommentList | null
-): Partial<CommentList> | null {
-  if (!comments) return null;
-  return {
-    comments: comments.comments?.map((c) => ({
-      id: c.id,
-      text: c.text,
-      createdBy: c.createdBy,
-      createdDate: c.createdDate,
-      modifiedBy: c.modifiedBy,
-      modifiedDate: c.modifiedDate,
-      version: c.version,
-    })),
-    count: comments.count,
-    totalCount: comments.totalCount,
-    continuationToken: comments.continuationToken,
-  };
-}
-
-export function formatComment(
-  comment: Comment | null
-): Partial<Comment> | null {
-  if (!comment) return null;
-  return {
-    id: comment.id,
-    text: comment.text,
-    createdBy: comment.createdBy,
-    createdDate: comment.createdDate,
-    modifiedBy: comment.modifiedBy,
-    modifiedDate: comment.modifiedDate,
-    version: comment.version,
-  };
-}
-
 export function formatWorkItemLinkResult(
   w: WorkItem | null
 ): Partial<WorkItem> | null {
@@ -189,16 +169,59 @@ export function formatWorkItemSummaryList(items: any[]): any[] {
   }));
 }
 
-export function formatBulkCreateResult(results: any[]): any[] {
-  if (!results) return [];
-  return results.map((r) => ({
-    type: r.type,
-    id: r.id,
-    title: r.title,
-    parentType: r.parentType,
-    created: r.created,
-    error: r.error,
-  }));
+export function formatBulkCreateResult(results: any[]): any {
+  if (!results) return { summary: { total: 0, created: 0, linked: 0, failed: 0, errors: [] }, results: [] };
+  
+  const summary = {
+    total: results.length,
+    created: results.filter((r: any) => r.created && !r.error).length,
+    linked: results.filter((r: any) => !r.created && !r.error).length,
+    failed: results.filter((r: any) => r.error).length,
+    errors: results.filter((r: any) => r.error).map((r: any) => ({
+      type: r.type,
+      title: r.title,
+      error: r.error
+    }))
+  };
+  
+  return {
+    summary,
+    results: results.map((r: any) => ({
+      type: r.type,
+      id: r.id,
+      title: r.title,
+      parentType: r.parentType,
+      created: r.created,
+      error: r.error,
+      url: r.url
+    }))
+  };
+}
+
+export function formatBulkUpdateResult(results: any[]): any {
+  if (!results) return { summary: { totalWorkItems: 0, totalActions: 0, successfulWorkItems: 0, failedWorkItems: 0, successfulActions: 0, failedActions: 0 }, results: [] };
+  
+  const summary = {
+    totalWorkItems: results.length,
+    totalActions: results.reduce((sum: number, r: any) => sum + r.actions.length, 0),
+    successfulWorkItems: results.filter((r: any) => r.actions.every((a: any) => a.success)).length,
+    failedWorkItems: results.filter((r: any) => r.actions.some((a: any) => !a.success)).length,
+    successfulActions: results.reduce((sum: number, r: any) => sum + r.actions.filter((a: any) => a.success).length, 0),
+    failedActions: results.reduce((sum: number, r: any) => sum + r.actions.filter((a: any) => !a.success).length, 0)
+  };
+  
+  return {
+    summary,
+    results: results.map((r: any) => ({
+      id: r.id,
+      actions: r.actions.map((a: any) => ({
+        action: a.action,
+        field: a.field,
+        success: a.success,
+        error: a.error
+      }))
+    }))
+  };
 }
 
 export function formatDestroyWorkItemsResult(

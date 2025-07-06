@@ -228,16 +228,6 @@ export class WorkItemService {
     return api.getWorkItemNextStatesOnCheckinAction([id], action);
   }
 
-  async addComment(project: string, workItemId: number, comment: string) {
-    const api = await this.getApi();
-    return api.addComment({ text: comment }, project, workItemId);
-  }
-
-  async getComments(project: string, workItemId: number, top?: number) {
-    const api = await this.getApi();
-    return api.getComments(project, workItemId, top);
-  }
-
   async getTeamIterations(project: string, team: string) {
     const workApi = await this.getWorkApi();
     const teamContext: TeamContext = { project: project, team: team };
@@ -313,106 +303,106 @@ export class WorkItemService {
   }
 
   async bulkCreateWorkItems(payload: any) {
-    const { project, epics = [] } = payload;
+    const { project, items = [], batchSize = 3 } = payload;
     const results: any[] = [];
     const workItemService = this;
+    
     async function createLevel(
-      parentUrl: any,
-      parentType: any,
-      items: any,
-      type: any,
-      childKey: any
+      parentUrl: string | null,
+      parentType: string | null,
+      items: any[],
+      batchSize: number
     ) {
-      if (!items) return;
-      for (const item of items) {
-        let itemId = item.id;
-        let itemUrl;
-        let created = false;
-        let title = item.title;
-        let error = null;
-        try {
-          if (!itemId) {
-            if (!title) throw new Error(`Missing title for new ${type}`);
-            const fields = { "System.Title": title, ...(item.fields || {}) };
-            const createdItem = await workItemService.createWorkItem(
-              project,
-              type,
-              fields
-            );
-            itemId = createdItem.id;
-            itemUrl = createdItem.url;
-            created = true;
-            if (parentUrl) {
-              await workItemService.linkWorkItemsByUrl(
-                parentUrl,
-                itemId,
-                "System.LinkTypes.Hierarchy-Reverse"
+      if (!items || items.length === 0) return;
+      
+      // Process items in batches for better performance
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const batchPromises = batch.map(async (item) => {
+          let itemId = item.id;
+          let itemUrl: string | null = null;
+          let created = false;
+          let title = item.title;
+          let error = null;
+          
+          try {
+            if (!itemId) {
+              if (!title) throw new Error(`Missing title for new ${item.type}`);
+              const fields = { "System.Title": title, ...(item.fields || {}) };
+              const createdItem = await workItemService.createWorkItem(
+                project,
+                item.type,
+                fields
               );
+              itemId = createdItem.id;
+              itemUrl = createdItem.url || null;
+              created = true;
+              
+              if (parentUrl) {
+                await workItemService.linkWorkItemsByUrl(
+                  parentUrl,
+                  itemId,
+                  "System.LinkTypes.Hierarchy-Reverse"
+                );
+              }
+              
+              results.push({
+                type: item.type,
+                id: itemId,
+                title,
+                parentType,
+                parentUrl,
+                created: true,
+                url: itemUrl,
+              });
+            } else {
+              const existing = await workItemService.getWorkItemDetails(itemId);
+              itemUrl = existing.url || null;
+              title = existing.fields?.["System.Title"] || title;
+              
+              if (parentUrl) {
+                await workItemService.linkWorkItemsByUrl(
+                  parentUrl,
+                  itemId,
+                  "System.LinkTypes.Hierarchy-Reverse"
+                );
+              }
+              
+              results.push({
+                type: item.type,
+                id: itemId,
+                title,
+                parentType,
+                parentUrl,
+                created: false,
+                url: itemUrl,
+              });
             }
+            
+            // Process children recursively
+            if (item.children && item.children.length > 0) {
+              await createLevel(itemUrl, item.type, item.children, batchSize);
+            }
+          } catch (e: any) {
+            error = (e as Error).message || String(e);
             results.push({
-              type,
+              type: item.type,
               id: itemId,
               title,
               parentType,
               parentUrl,
-              created: true,
-            });
-          } else {
-            const existing = await workItemService.getWorkItemDetails(itemId);
-            itemUrl = existing.url;
-            title = existing.fields?.["System.Title"] || title;
-            if (parentUrl) {
-              await workItemService.linkWorkItemsByUrl(
-                parentUrl,
-                itemId,
-                "System.LinkTypes.Hierarchy-Reverse"
-              );
-            }
-            results.push({
-              type,
-              id: itemId,
-              title,
-              parentType,
-              parentUrl,
-              created: false,
+              created,
+              error,
+              url: itemUrl,
             });
           }
-          if (childKey && item[childKey]) {
-            let nextType =
-              childKey === "features"
-                ? "Feature"
-                : childKey === "user_stories"
-                ? "User Story"
-                : childKey === "tasks"
-                ? "Task"
-                : undefined;
-            await createLevel(
-              itemUrl,
-              type,
-              item[childKey],
-              nextType,
-              childKey === "features"
-                ? "user_stories"
-                : childKey === "user_stories"
-                ? "tasks"
-                : undefined
-            );
-          }
-        } catch (e: any) {
-          error = (e as Error).message || String(e);
-          results.push({
-            type,
-            id: itemId,
-            title,
-            parentType,
-            parentUrl,
-            created,
-            error,
-          });
-        }
+        });
+        
+        await Promise.all(batchPromises);
       }
     }
-    await createLevel(null, null, epics, "Epic", "features");
+    
+    await createLevel(null, null, items, batchSize);
     return results;
   }
 
@@ -517,5 +507,12 @@ export class WorkItemService {
     const api = await this.getApi();
     const nodes = await api.getClassificationNodes(project, [id], 1);
     return nodes && nodes.length > 0 ? nodes[0] : null;
+  }
+
+  async getWorkItemType(project: string, type: string) {
+    const api = await this.getApi();
+
+    const workItemType = await api.getWorkItemType(project, type);
+    return workItemType;
   }
 }
