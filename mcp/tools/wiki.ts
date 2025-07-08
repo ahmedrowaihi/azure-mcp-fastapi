@@ -4,7 +4,7 @@ import type { FastMCP } from "fastmcp";
 
 export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
   server.addTool({
-    name: "wiki.list",
+    name: "wiki-list",
     description: `
       List all wikis in a project.
       Optional parameters:
@@ -19,7 +19,7 @@ export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
   });
 
   server.addTool({
-    name: "wiki.get",
+    name: "wiki-get",
     description: `
       Get details for a specific wiki by ID.
       Required parameters:
@@ -36,7 +36,7 @@ export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
   });
 
   server.addTool({
-    name: "wiki.create",
+    name: "wiki-create",
     description: `
       Create a new wiki in a project.
       Required parameters:
@@ -63,7 +63,7 @@ export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
   });
 
   server.addTool({
-    name: "wiki.update",
+    name: "wiki-update",
     description: `
       Update a wiki's properties.
       Required parameters:
@@ -88,7 +88,7 @@ export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
   });
 
   server.addTool({
-    name: "wiki.delete",
+    name: "wiki-delete",
     description: `
       Delete a wiki by ID.
       Required parameters:
@@ -105,7 +105,7 @@ export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
   });
 
   server.addTool({
-    name: "wiki.page.list",
+    name: "wiki-page-list",
     description: `
       List all pages in a wiki as a flat array.
       Required parameters:
@@ -124,7 +124,7 @@ export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
   });
 
   server.addTool({
-    name: "wiki.page.get",
+    name: "wiki-page-get",
     description: `
       Get the content of a wiki page as text.
       Required parameters:

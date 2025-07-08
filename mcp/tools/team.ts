@@ -6,7 +6,7 @@ import type { FastMCP } from "fastmcp";
 
 export function registerTeamTools(server: FastMCP, teamService: TeamService) {
   server.addTool({
-    name: "team.list",
+    name: "team-list",
     description: `
       List all teams for a specific project.
       Required parameters:
@@ -26,7 +26,7 @@ export function registerTeamTools(server: FastMCP, teamService: TeamService) {
   });
   
   server.addTool({
-    name: "team.listMembers",
+    name: "team-list-members",
     description: `
       List all team members for a specific team.
       Required parameters:

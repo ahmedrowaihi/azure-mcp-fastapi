@@ -8,7 +8,7 @@ export function registerProjectTools(
   projectService: ProjectService
 ) {
   server.addTool({
-    name: "project.list",
+    name: "project-list",
     description: `
       List all Azure DevOps projects in your organization.
       No parameters required.

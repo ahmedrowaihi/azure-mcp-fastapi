@@ -31,7 +31,7 @@ export function registerWorkItemTools(
 ) {
   // Work Item Types and Queries
   server.addTool({
-    name: "workItem.type.list",
+    name: "workItem-type-list",
     description: `
       List all available work item types for a project, including their required and optional fields.
       Required parameters:
@@ -64,7 +64,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.type.get",
+    name: "workItem-type-get",
     description: `
       List all available fields for a work item type.
       Required parameters:
@@ -88,7 +88,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.listQueries",
+    name: "workItem-list-queries",
     description: `
       List all saved work item queries for a project.
       Required parameters:
@@ -108,7 +108,7 @@ export function registerWorkItemTools(
 
   // Work Item CRUD Operations
   server.addTool({
-    name: "workItem.create",
+    name: "workItem-create",
     description: `
       Create a new work item of any type (Epic, Feature, User Story, Task, Bug, etc.).
       Required parameters:
@@ -148,7 +148,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.update",
+    name: "workItem-update",
     description: `
       Update an existing work item with new field values. Can be used for assignment, state transitions, and any field updates.
       Required parameters:
@@ -176,7 +176,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.delete",
+    name: "workItem-delete",
     description: `
       Permanently delete (destroy) work items. This action is IRREVERSIBLE and cannot be undone.
       Required parameters:
@@ -232,7 +232,7 @@ export function registerWorkItemTools(
 
   // Work Item Querying and Listing
   server.addTool({
-    name: "workItem.list",
+    name: "workItem-list",
     description: `
       List work items using various filtering options. Can query by WIQL, filter by type/assignee, or get all work items in a project.
       Required parameters:
@@ -302,7 +302,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.bulkQuery",
+    name: "workItem-bulk-query",
     description: `
       Execute multiple WIQL queries in parallel for better performance when querying large datasets.
       Required parameters:
@@ -385,7 +385,7 @@ export function registerWorkItemTools(
 
   // Work Item States
   server.addTool({
-    name: "workItem.listStates",
+    name: "workItem-list-states",
     description: `
       Get available states for a specific work item type.
       Required parameters:
@@ -407,7 +407,7 @@ export function registerWorkItemTools(
 
   // Work Item Linking
   server.addTool({
-    name: "workItem.link",
+    name: "workItem-link",
     description: `
       Link an existing child work item to a parent by ID (creates parent-child relationship).
       Required parameters:
@@ -441,7 +441,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.unlink",
+    name: "workItem-unlink",
     description: `
       Unlink a child work item from a parent by ID (removes parent-child relationship).
       Required parameters:
@@ -476,7 +476,7 @@ export function registerWorkItemTools(
 
   // Bulk Operations
   server.addTool({
-    name: "workItem.bulkCreate",
+    name: "workItem-bulk-create",
     description: `
       Bulk create work items with hierarchical relationships. Supports creating any work item types with parent/child relationships.
       Required parameters:
@@ -554,7 +554,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.bulkUpdate",
+      name: "workItem-bulk-update",
     description: `
       Bulk update work items with multiple actions: assign, change state, set iteration, add comment, or update custom fields.
       Required parameters:
@@ -667,7 +667,7 @@ export function registerWorkItemTools(
 
   // Iteration Tools
   server.addTool({
-    name: "iteration.list",
+    name: "iteration-list",
     description: `
       List all iterations (sprints) currently assigned to a team.
       Required parameters:
@@ -688,7 +688,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "iteration.create",
+    name: "iteration-create",
     description: `
       Create a team iteration (sprint) for a project and team.
       Required parameters:
@@ -735,7 +735,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "iteration.delete",
+    name: "iteration-delete",
     description: `
       Delete one or more team iterations by ID.
       Required parameters:
@@ -769,7 +769,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "iteration.assign",
+    name: "iteration-assign",
     description: `
       Assign a work item to a team iteration (sprint).
       Required parameters:
@@ -790,7 +790,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "iteration.listWorkItems",
+    name: "iteration-list-work-items",
     description: `
       List all work items assigned to a specific team iteration (sprint).
       Required parameters:
@@ -813,7 +813,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "iteration.updateDates",
+    name: "iteration-update-dates",
     description: `
       Update the start and end dates for a project-level iteration node (affects all teams using this iteration).
       Required parameters:
@@ -854,7 +854,7 @@ export function registerWorkItemTools(
 
   // Team Capacity
   server.addTool({
-    name: "team.capacity",
+    name: "team-capacity",
     description: `
       Get team capacity for an iteration.
       Required parameters:
@@ -878,7 +878,7 @@ export function registerWorkItemTools(
 
   // Project Iterations (for debugging/advanced use)
   server.addTool({
-    name: "iteration.listProject",
+    name: "iteration-list-project",
     description: `
       List all project-level iteration nodes for a project.
       Required parameters:
@@ -896,7 +896,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "iteration.getById",
+    name: "iteration-get-by-id",
     description: `
       Fetch a project-level iteration node by its numeric ID (for debugging).
       Required parameters:
