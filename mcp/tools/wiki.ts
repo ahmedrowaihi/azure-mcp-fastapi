@@ -143,4 +143,4 @@ export function registerWikiTools(server: FastMCP, wikiService: WikiService) {
       return content;
     },
   });
-} 
+}
