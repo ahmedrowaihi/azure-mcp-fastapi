@@ -277,7 +277,7 @@ export function registerWorkItemTools(
   });
 
   server.addTool({
-    name: "workItem.executeQuery",
+    name: "workItem-executeQuery",
     description: `
       Execute a saved work item query by its ID.
       Required parameters:
@@ -665,6 +665,27 @@ export function registerWorkItemTools(
     },
   });
 
+  // Iteration Tools
+  server.addTool({
+    name: "current-iteration",
+    description: `
+      List current active iteration (sprint) assigned to the team.
+      Required parameters:
+        - project: The Azure DevOps project name.
+        - team: The team name.
+      Returns: Array of iterations with their names, IDs, and dates.
+      Example: { "project": "MyProject", "team": "Development Team" }
+    `,
+    parameters: z.object({
+      project: z.string().describe("Azure DevOps project name."),
+      team: z.string().describe("Team name."),
+    }),
+    async execute(args) {
+      const { project, team } = args;
+      const iterations = await workItemService.getCurrentIteration(project, team);
+      return JSON.stringify(formatTeamIterations(iterations));
+    },
+  });
   // Iteration Tools
   server.addTool({
     name: "iteration-list",

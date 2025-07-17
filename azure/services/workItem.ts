@@ -234,6 +234,11 @@ export class WorkItemService {
     return workApi.getTeamIterations(teamContext);
   }
 
+  async getCurrentIteration(project: string, team: string){
+    const workApi = await this.getWorkApi();
+    const teamContext: TeamContext = { project: project, team: team };
+    return workApi.getTeamIterations(teamContext, 'current');
+  }
   async assignToIteration(id: number, iterationId: string) {
     return this.updateWorkItem(id, { "System.IterationPath": iterationId });
   }
