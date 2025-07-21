@@ -5,6 +5,14 @@ import type { TeamContext } from "azure-devops-node-api/interfaces/CoreInterface
 import type { Wiql } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces";
 import { TreeStructureGroup } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces";
 
+function splitIntoChunks<T>(arr: T[], chunkSize: number = 100): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    result.push(arr.slice(i, i + chunkSize));
+  }
+  return result;
+}
+
 export class WorkItemService {
   private api?: IWorkItemTrackingApi;
   private workApi?: IWorkApi;
@@ -234,7 +242,7 @@ export class WorkItemService {
     return workApi.getTeamIterations(teamContext);
   }
 
-  async getCurrentIteration(project: string, team: string){
+  async getCurrentIteration(project: string, team?: string){
     const workApi = await this.getWorkApi();
     const teamContext: TeamContext = { project: project, team: team };
     return workApi.getTeamIterations(teamContext, 'current');
@@ -301,17 +309,23 @@ export class WorkItemService {
     return api.updateWorkItem([], patch, childId);
   }
 
-  async getWorkItemsDetailsFromQueryResult(result: any) {
-    const ids = result?.workItems?.map((wi: any) => wi.id) ?? [];
+  async getWorkItemsDetailsFromQueryResult(result: {workItems: {id: number}[]}) {
+    const ids : number[]= result?.workItems?.map((wi: any) => wi.id) ?? [];
     if (ids.length === 0) return [];
-    return this.listWorkItems(ids);
+    // note: azure api is not responding for very big arrays => we split into chunks and regroup.
+    const chunks = splitIntoChunks(ids, 100);
+    const response = [];
+    for (let chunk of chunks){
+        response.push(...await this.listWorkItems(chunk))
+    }
+    return response;
   }
 
   async bulkCreateWorkItems(payload: any) {
     const { project, items = [], batchSize = 3 } = payload;
     const results: any[] = [];
     const workItemService = this;
-    
+
     async function createLevel(
       parentUrl: string | null,
       parentType: string | null,
@@ -319,7 +333,7 @@ export class WorkItemService {
       batchSize: number
     ) {
       if (!items || items.length === 0) return;
-      
+
       // Process items in batches for better performance
       for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
@@ -329,7 +343,7 @@ export class WorkItemService {
           let created = false;
           let title = item.title;
           let error = null;
-          
+
           try {
             if (!itemId) {
               if (!title) throw new Error(`Missing title for new ${item.type}`);
@@ -342,7 +356,7 @@ export class WorkItemService {
               itemId = createdItem.id;
               itemUrl = createdItem.url || null;
               created = true;
-              
+
               if (parentUrl) {
                 await workItemService.linkWorkItemsByUrl(
                   parentUrl,
@@ -350,7 +364,7 @@ export class WorkItemService {
                   "System.LinkTypes.Hierarchy-Reverse"
                 );
               }
-              
+
               results.push({
                 type: item.type,
                 id: itemId,
@@ -364,7 +378,7 @@ export class WorkItemService {
               const existing = await workItemService.getWorkItemDetails(itemId);
               itemUrl = existing.url || null;
               title = existing.fields?.["System.Title"] || title;
-              
+
               if (parentUrl) {
                 await workItemService.linkWorkItemsByUrl(
                   parentUrl,
@@ -372,7 +386,7 @@ export class WorkItemService {
                   "System.LinkTypes.Hierarchy-Reverse"
                 );
               }
-              
+
               results.push({
                 type: item.type,
                 id: itemId,
@@ -383,7 +397,7 @@ export class WorkItemService {
                 url: itemUrl,
               });
             }
-            
+
             // Process children recursively
             if (item.children && item.children.length > 0) {
               await createLevel(itemUrl, item.type, item.children, batchSize);
@@ -402,11 +416,11 @@ export class WorkItemService {
             });
           }
         });
-        
+
         await Promise.all(batchPromises);
       }
     }
-    
+
     await createLevel(null, null, items, batchSize);
     return results;
   }
