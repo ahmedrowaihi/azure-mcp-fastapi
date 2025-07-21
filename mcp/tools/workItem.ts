@@ -69,7 +69,7 @@ export function registerWorkItemTools(
       List all available fields for a work item type.
       Required parameters:
         - project: The Azure DevOps project name.
-        - type: The work item type (e.g., "Epic", "Feature", "User Story", "Task").
+        - type: The work item type (Epic, Feature, User Story, Task, Bug).
       Returns: Array of fields with their names, reference names, descriptions, required status, and allowed values.
       Example: { "project": "MyProject", "type": "Task" }
 
@@ -78,7 +78,9 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("The Azure DevOps project name."),
-      type: z.string().describe("The work item type (e.g., Epic, Feature, User Story, Task)."),
+      type: z
+        .enum(["Epic", "Feature", "User Story", "Task", "Bug"])
+        .describe("The work item type (Epic, Feature, User Story, Task, Bug)."),
     }),
     async execute(args) {
       const { project, type } = args;
@@ -113,28 +115,41 @@ export function registerWorkItemTools(
       Create a new work item of any type (Epic, Feature, User Story, Task, Bug, etc.).
       Required parameters:
         - project: The Azure DevOps project name (e.g., "MyProject").
-        - type: The work item type (e.g., "Epic", "Feature", "User Story", "Task").
-        - fields: Object containing field values (e.g., { "System.Title": "My Task" }).
+        - type: The work item type (Epic, Feature, User Story, Task, Bug).
+        - fields: Object containing field values (e.g., { "System.Title": "My Task"...etc (other azure devops work items fields) }).
       Optional parameters:
         - parentUrl: The full URL of the parent work item (to create hierarchy).
       Returns: The created work item summary (id, fields, url).
       Example: {
         "project": "MyProject",
         "type": "Task",
-        "fields": { "System.Title": "Write documentation", "System.Description": "Update README" },
+        "fields": { "System.Title": "Write documentation", "System.Description": "Update README"... },
         "parentUrl": "https://dev.azure.com/org/project/_apis/wit/workItems/123"
       }
     `,
     parameters: z.object({
       project: z.string().describe("The name of the Azure DevOps project."),
-      type: z.string().describe("The work item type (e.g., Epic, Feature, User Story, Task)."),
-      fields: z.record(z.any()).describe("Object containing field values for the work item."),
-      parentUrl: z.string().optional().describe("The full URL of the parent work item."),
+      type: z
+        .enum(["Epic", "Feature", "User Story", "Task", "Bug"])
+        .describe("The work item type (Epic, Feature, User Story, Task, Bug)."),
+      fields: z
+        .record(z.any())
+        .describe("Object containing field values for the work item."),
+      parentUrl: z
+        .string()
+        .optional()
+        .describe(
+          "The full URL of the parent work item, Bug and Task can only have a User Story as parent, User Story can only have a Feature as a parent, a Feature can only have an Epic as a parent."
+        ),
     }),
     async execute(args) {
       const { project, type, fields, parentUrl } = args;
-      const workItem = await workItemService.createWorkItem(project, type, fields);
-      
+      const workItem = await workItemService.createWorkItem(
+        project,
+        type,
+        fields
+      );
+
       if (parentUrl) {
         await workItemService.linkWorkItemsByUrl(
           parentUrl,
@@ -142,7 +157,7 @@ export function registerWorkItemTools(
           "System.LinkTypes.Hierarchy-Reverse"
         );
       }
-      
+
       return JSON.stringify(formatWorkItemSummary(workItem));
     },
   });
@@ -166,7 +181,9 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       id: z.number().describe("The ID of the work item to update."),
-      fields: z.record(z.any()).describe("Object containing field values to update."),
+      fields: z
+        .record(z.any())
+        .describe("Object containing field values to update."),
     }),
     async execute(args) {
       const { id, fields } = args;
@@ -189,13 +206,20 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("The name of the Azure DevOps project."),
-      ids: z.array(z.number()).describe("List of work item IDs to permanently delete."),
-      batchSize: z.number().optional().describe("Number of work items to delete in parallel (default: 5, max: 20)."),
+      ids: z
+        .array(z.number())
+        .describe("List of work item IDs to permanently delete."),
+      batchSize: z
+        .number()
+        .optional()
+        .describe(
+          "Number of work items to delete in parallel (default: 5, max: 20)."
+        ),
     }),
     async execute({ project, ids, batchSize = 5 }) {
       const maxBatchSize = Math.min(batchSize, 20); // Cap at 20 for performance
       const results = [];
-      
+
       // Process deletions in batches for better performance
       for (let i = 0; i < ids.length; i += maxBatchSize) {
         const batch = ids.slice(i, i + maxBatchSize);
@@ -211,21 +235,23 @@ export function registerWorkItemTools(
             };
           }
         });
-        
+
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
       }
-      
+
       const summary = {
         total: ids.length,
-        successful: results.filter(r => r.success).length,
-        failed: results.filter(r => !r.success).length,
-        errors: results.filter(r => !r.success).map(r => ({ id: r.id, error: r.error }))
+        successful: results.filter((r) => r.success).length,
+        failed: results.filter((r) => !r.success).length,
+        errors: results
+          .filter((r) => !r.success)
+          .map((r) => ({ id: r.id, error: r.error })),
       };
-      
+
       return JSON.stringify({
         summary,
-        results: formatDestroyWorkItemsResult(results)
+        results: formatDestroyWorkItemsResult(results),
       });
     },
   });
@@ -250,28 +276,60 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("The name of the Azure DevOps project."),
-      wiql: z.string().optional().describe("WIQL query string for custom filtering."),
-      types: z.array(z.string()).optional().describe("Array of work item types to filter by."),
-      assignedTo: z.string().optional().describe("Filter by assigned user (exact match required)."),
-      top: z.number().optional().describe("Maximum number of results to return."),
+      wiql: z
+        .string()
+        .optional()
+        .describe("WIQL query string for custom filtering."),
+      types: z
+        .array(z.enum(["Epic", "Feature", "User Story", "Task", "Bug"]))
+        .optional()
+        .describe("Array of work item types to filter by."),
+      assignedTo: z
+        .string()
+        .optional()
+        .describe("Filter by assigned user (exact match required)."),
+      top: z
+        .number()
+        .optional()
+        .describe("Maximum number of results to return."),
     }),
     async execute(args) {
       const { project, wiql, types, assignedTo, top } = args;
-      
+
       let queryWiql = wiql;
       if (!queryWiql) {
-        queryWiql = `SELECT [System.Id], [System.Title], [System.WorkItemType], [System.State], [System.AreaPath], [System.IterationPath] FROM WorkItems WHERE [System.AreaPath] = '${project}'`;
+        queryWiql = `SELECT [System.Id],
+                                    [System.Title],
+                                    [System.WorkItemType],
+                                    [System.State],
+                                    [System.AreaPath],
+                                    [System.IterationPath]
+                             FROM WorkItems
+                             WHERE [System.AreaPath] = '${project}'`;
         if (types && types.length > 0) {
-          const typeList = types.map((t) => `'${t.replace(/'/g, "''")}'`).join(", ");
+          const typeList = types
+            .map((t) => `'${t.replace(/'/g, "''")}'`)
+            .join(", ");
           queryWiql += ` AND [System.WorkItemType] IN (${typeList})`;
+        } else {
+          queryWiql += ` AND [System.WorkItemType] IN ('Epic', 'Feature', 'User Story', 'Task', 'Bug')`;
         }
         if (assignedTo) {
-          queryWiql += ` AND [System.AssignedTo] = '${assignedTo.replace(/'/g, "''")}'`;
+          queryWiql += ` AND [System.AssignedTo] = '${assignedTo.replace(
+            /'/g,
+            "''"
+          )}'`;
         }
       }
-      
-      const result = await workItemService.queryWorkItems(project, queryWiql, top);
-      const items = await workItemService.getWorkItemsDetailsFromQueryResult(result);
+
+      const result = await workItemService.queryWorkItems(
+        project,
+        queryWiql,
+        top
+      );
+      const items = await workItemService.getWorkItemsDetailsFromQueryResult(
+        result
+      );
       return JSON.stringify(formatWorkItemList(items));
     },
   });
@@ -291,12 +349,17 @@ export function registerWorkItemTools(
     parameters: z.object({
       project: z.string().describe("The name of the Azure DevOps project."),
       queryId: z.string().describe("The ID of the saved query to execute."),
-      top: z.number().optional().describe("Maximum number of results to return."),
+      top: z
+        .number()
+        .optional()
+        .describe("Maximum number of results to return."),
     }),
     async execute(args) {
       const { project, queryId, top } = args;
       const result = await workItemService.executeQuery(project, queryId, top);
-      const items = await workItemService.getWorkItemsDetailsFromQueryResult(result);
+      const items = await workItemService.getWorkItemsDetailsFromQueryResult(
+        result
+      );
       return JSON.stringify(formatWorkItemList(items));
     },
   });
@@ -324,61 +387,81 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("The Azure DevOps project name."),
-      queries: z.array(
-        z.object({
-          name: z.string().describe("Name/identifier for this query."),
-          wiql: z.string().describe("The WIQL query string."),
-        })
-      ).describe("Array of query objects to execute."),
-      top: z.number().optional().describe("Maximum number of work items per query (default: 100, max: 1000)."),
-      batchSize: z.number().optional().describe("Number of queries to execute in parallel (default: 5, max: 10)."),
+      queries: z
+        .array(
+          z.object({
+            name: z.string().describe("Name/identifier for this query."),
+            wiql: z.string().describe("The WIQL query string."),
+          })
+        )
+        .describe("Array of query objects to execute."),
+      top: z
+        .number()
+        .optional()
+        .describe(
+          "Maximum number of work items per query (default: 100, max: 1000)."
+        ),
+      batchSize: z
+        .number()
+        .optional()
+        .describe(
+          "Number of queries to execute in parallel (default: 5, max: 10)."
+        ),
     }),
     async execute(args) {
       const { project, queries, top = 100, batchSize = 5 } = args;
       const maxTop = Math.min(top, 1000);
       const maxBatchSize = Math.min(batchSize, 10);
       const results = [];
-      
+
       // Process queries in batches
       for (let i = 0; i < queries.length; i += maxBatchSize) {
         const batch = queries.slice(i, i + maxBatchSize);
         const batchPromises = batch.map(async (query) => {
           try {
-            const result = await workItemService.queryWorkItems(project, query.wiql, maxTop);
-            const items = await workItemService.getWorkItemsDetailsFromQueryResult(result);
+            const result = await workItemService.queryWorkItems(
+              project,
+              query.wiql,
+              maxTop
+            );
+            const items =
+              await workItemService.getWorkItemsDetailsFromQueryResult(result);
             return {
               name: query.name,
               success: true,
               count: items?.length || 0,
-              result: formatWorkItemList(items)
+              result: formatWorkItemList(items),
             };
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
             return {
               name: query.name,
               success: false,
               error: errorMessage,
               count: 0,
-              result: null
+              result: null,
             };
           }
         });
-        
+
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
       }
-      
+
       const summary = {
         totalQueries: queries.length,
-        successfulQueries: results.filter(r => r.success).length,
-        failedQueries: results.filter(r => !r.success).length,
+        successfulQueries: results.filter((r) => r.success).length,
+        failedQueries: results.filter((r) => !r.success).length,
         totalWorkItems: results.reduce((sum, r) => sum + r.count, 0),
-        errors: results.filter(r => !r.success).map(r => ({ name: r.name, error: r.error }))
+        errors: results
+          .filter((r) => !r.success)
+          .map((r) => ({ name: r.name, error: r.error })),
       };
-      
+
       return JSON.stringify({
         summary,
-        results
+        results,
       });
     },
   });
@@ -396,11 +479,18 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("The name of the Azure DevOps project."),
-      workItemType: z.string().describe("The work item type (e.g., Epic, Feature, User Story, Task)."),
+      workItemType: z
+        .string()
+        .describe(
+          "The work item type (e.g., Epic, Feature, User Story, Task)."
+        ),
     }),
     async execute(args) {
       const { project, workItemType } = args;
-      const states = await workItemService.getWorkItemStates(project, workItemType);
+      const states = await workItemService.getWorkItemStates(
+        project,
+        workItemType
+      );
       return JSON.stringify(formatWorkItemStates(states));
     },
   });
@@ -427,7 +517,12 @@ export function registerWorkItemTools(
       project: z.string().describe("The Azure DevOps project name."),
       parentId: z.number().describe("The ID of the parent work item."),
       childId: z.number().describe("The ID of the child work item to link."),
-      linkType: z.string().optional().describe("The link type to use (default: System.LinkTypes.Hierarchy-Reverse)."),
+      linkType: z
+        .string()
+        .optional()
+        .describe(
+          "The link type to use (default: System.LinkTypes.Hierarchy-Reverse)."
+        ),
     }),
     async execute(args) {
       const { project, parentId, childId, linkType } = args;
@@ -461,7 +556,12 @@ export function registerWorkItemTools(
       project: z.string().describe("The Azure DevOps project name."),
       parentId: z.number().describe("The ID of the parent work item."),
       childId: z.number().describe("The ID of the child work item to unlink."),
-      linkType: z.string().optional().describe("The link type to remove (default: System.LinkTypes.Hierarchy-Reverse)."),
+      linkType: z
+        .string()
+        .optional()
+        .describe(
+          "The link type to remove (default: System.LinkTypes.Hierarchy-Reverse)."
+        ),
     }),
     async execute(args) {
       const { project, parentId, childId, linkType } = args;
@@ -515,46 +615,80 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("The name of the Azure DevOps project."),
-      items: z.array(
-        z.object({
-          type: z.string().describe("The work item type (e.g., Epic, Feature, User Story, Task)."),
-          id: z.number().optional().describe("Existing work item ID to link to (instead of creating new)."),
-          title: z.string().optional().describe("Title for the work item (required if creating new)."),
-          fields: z.record(z.any()).optional().describe("Additional fields for the work item."),
-          children: z.array(z.lazy(() => z.any())).optional().describe("Child work items with the same structure."),
-        })
-      ).describe("Array of work item objects to create with optional children."),
-      batchSize: z.number().optional().describe("Number of items to process in parallel (default: 3, max: 10)."),
+      items: z
+        .array(
+          z.object({
+            type: z
+              .string()
+              .describe(
+                "The work item type (e.g., Epic, Feature, User Story, Task)."
+              ),
+            id: z
+              .number()
+              .optional()
+              .describe(
+                "Existing work item ID to link to (instead of creating new)."
+              ),
+            title: z
+              .string()
+              .optional()
+              .describe("Title for the work item (required if creating new)."),
+            fields: z
+              .record(z.any())
+              .optional()
+              .describe("Additional fields for the work item."),
+            children: z
+              .array(z.lazy(() => z.any()))
+              .optional()
+              .describe("Child work items with the same structure."),
+          })
+        )
+        .describe(
+          "Array of work item objects to create with optional children."
+        ),
+      batchSize: z
+        .number()
+        .optional()
+        .describe(
+          "Number of items to process in parallel (default: 3, max: 10)."
+        ),
     }),
     async execute(args) {
       const { project, items, batchSize = 3 } = args;
       const maxBatchSize = Math.min(batchSize, 10); // Cap at 10 for performance
-      
+
       try {
         const results = await workItemService.bulkCreateWorkItems({
           project,
           items,
-          batchSize: maxBatchSize
+          batchSize: maxBatchSize,
         });
         return JSON.stringify(formatBulkCreateResult(results));
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         return JSON.stringify({
           summary: {
             total: 0,
             created: 0,
             linked: 0,
             failed: 1,
-            errors: [{ type: "BULK_CREATE", title: "Bulk Create Failed", error: errorMessage }]
+            errors: [
+              {
+                type: "BULK_CREATE",
+                title: "Bulk Create Failed",
+                error: errorMessage,
+              },
+            ],
           },
-          results: []
+          results: [],
         });
       }
     },
   });
 
   server.addTool({
-      name: "workItem-bulk-update",
+    name: "workItem-bulk-update",
     description: `
       Bulk update work items with multiple actions: assign, change state, set iteration, add comment, or update custom fields.
       Required parameters:
@@ -576,46 +710,76 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       ids: z.array(z.number()).describe("List of work item IDs to update."),
-      actions: z.array(
-        z.object({
-          action: z.enum(["assign", "state", "iteration", "field"]).describe("The action to perform."),
-          value: z.string().describe("The value for the action (user, state, iteration, or field value)."),
-          field: z.string().optional().describe("The field reference name to update (required for 'field' action)."),
-          project: z.string().optional().describe("The project name (required for comment action)."),
-        })
-      ).describe("Array of actions to perform on each work item."),
-      batchSize: z.number().optional().describe("Number of work items to process in parallel (default: 5, max: 20)."),
-      summary: z.boolean().optional().describe("If true, return summary output; if false, return full work item details. Default: true."),
+      actions: z
+        .array(
+          z.object({
+            action: z
+              .enum(["assign", "state", "iteration", "field"])
+              .describe("The action to perform."),
+            value: z
+              .string()
+              .describe(
+                "The value for the action (user, state, iteration, or field value)."
+              ),
+            field: z
+              .string()
+              .optional()
+              .describe(
+                "The field reference name to update (required for 'field' action)."
+              ),
+            project: z
+              .string()
+              .optional()
+              .describe("The project name (required for comment action)."),
+          })
+        )
+        .describe("Array of actions to perform on each work item."),
+      batchSize: z
+        .number()
+        .optional()
+        .describe(
+          "Number of work items to process in parallel (default: 5, max: 20)."
+        ),
+      summary: z
+        .boolean()
+        .optional()
+        .describe(
+          "If true, return summary output; if false, return full work item details. Default: true."
+        ),
     }),
     async execute(args) {
       const { ids, actions, batchSize = 5, summary = true } = args;
       const maxBatchSize = Math.min(batchSize, 20); // Cap at 20 for performance
       const results = [];
       const successIds = new Set<number>();
-      
+
       // Process work items in batches for better performance
       for (let i = 0; i < ids.length; i += maxBatchSize) {
         const batch = ids.slice(i, i + maxBatchSize);
         const batchPromises = batch.map(async (id) => {
           const actionResults = [];
           let allSuccess = true;
-          
+
           for (const act of actions) {
             try {
               let result;
               if (act.action === "assign") {
                 result = await workItemService.assignWorkItem(id, act.value);
               } else if (act.action === "state") {
-                result = await workItemService.transitionWorkItem(id, act.value);
+                result = await workItemService.transitionWorkItem(
+                  id,
+                  act.value
+                );
               } else if (act.action === "iteration") {
                 result = await workItemService.assignToIteration(id, act.value);
               } else if (act.action === "field") {
-                if (!act.field) throw new Error("Field is required for field action");
+                if (!act.field)
+                  throw new Error("Field is required for field action");
                 const fields: Record<string, any> = {};
                 fields[act.field] = act.value;
                 result = await workItemService.updateWorkItem(id, fields);
               }
-              
+
               actionResults.push({
                 action: act.action,
                 field: act.field,
@@ -631,21 +795,23 @@ export function registerWorkItemTools(
               allSuccess = false;
             }
           }
-          
+
           if (allSuccess) successIds.add(id);
           return { id, actions: actionResults };
         });
-        
+
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
       }
-      
+
       // Get updated work item details if requested
       let summaryOut: any[] = [];
       let detailsOut: any[] = [];
       if (successIds.size > 0) {
         try {
-          const items = await workItemService.listWorkItems(Array.from(successIds));
+          const items = await workItemService.listWorkItems(
+            Array.from(successIds)
+          );
           if (summary) {
             summaryOut = formatWorkItemSummaryList(items);
           } else {
@@ -656,7 +822,7 @@ export function registerWorkItemTools(
           console.warn("Could not fetch updated work item details:", error);
         }
       }
-      
+
       return JSON.stringify({
         ...formatBulkUpdateResult(results),
         summary: summaryOut,
@@ -678,11 +844,14 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("Azure DevOps project name."),
-      team: z.string().describe("Team name."),
+      team: z.string().describe("Team name.").optional(),
     }),
     async execute(args) {
       const { project, team } = args;
-      const iterations = await workItemService.getCurrentIteration(project, team);
+      const iterations = await workItemService.getCurrentIteration(
+        project,
+        team
+      );
       return JSON.stringify(formatTeamIterations(iterations));
     },
   });
@@ -732,8 +901,14 @@ export function registerWorkItemTools(
       project: z.string().describe("The name of the Azure DevOps project."),
       team: z.string().describe("The name of the team."),
       name: z.string().describe("The name of the iteration (sprint)."),
-      startDate: z.string().optional().describe("Start date (YYYY-MM-DD) of the iteration."),
-      finishDate: z.string().optional().describe("Finish date (YYYY-MM-DD) of the iteration."),
+      startDate: z
+        .string()
+        .optional()
+        .describe("Start date (YYYY-MM-DD) of the iteration."),
+      finishDate: z
+        .string()
+        .optional()
+        .describe("Finish date (YYYY-MM-DD) of the iteration."),
     }),
     async execute({ project, team, name, startDate, finishDate }) {
       // Step 1: Create project-level iteration node
@@ -801,7 +976,9 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       id: z.number().describe("Work item ID."),
-      iterationId: z.string().describe("Team iteration path (e.g., 'ProjectName\\Iteration 1')."),
+      iterationId: z
+        .string()
+        .describe("Team iteration path (e.g., 'ProjectName\\Iteration 1')."),
     }),
     async execute(args) {
       const { id, iterationId } = args;
@@ -816,20 +993,33 @@ export function registerWorkItemTools(
       List all work items assigned to a specific team iteration (sprint).
       Required parameters:
         - project: The Azure DevOps project name.
-        - team: The team name.
         - iterationId: The team iteration path.
+      Optional parameters:
+        - team: The team name.
       Returns: Array of work items assigned to the iteration.
       Example: { "project": "MyProject", "team": "Development Team", "iterationId": "MyProject\\Sprint 1" }
     `,
     parameters: z.object({
       project: z.string().describe("Azure DevOps project name."),
-      team: z.string().describe("Team name."),
-      iterationId: z.string().describe("Team iteration path (e.g., 'ProjectName\\Iteration 1')."),
+      team: z.string().describe("Team name.").optional(),
+      iterationId: z
+        .string()
+        .describe("Team iteration path (e.g., 'ProjectName\\Iteration 1')."),
     }),
     async execute(args) {
       const { project, team, iterationId } = args;
-      const result = await workItemService.getIterationWorkItems(project, team, iterationId);
-      return JSON.stringify(formatIterationWorkItems(result));
+      const result = await workItemService.getIterationWorkItems(
+        project,
+        team,
+        iterationId
+      );
+      const items = await workItemService.getWorkItemsDetailsFromQueryResult({
+        workItems:
+          result?.workItemRelations?.map((e) => ({
+            id: e?.target?.id as number,
+          })) ?? [],
+      });
+      return JSON.stringify(items);
     },
   });
 
@@ -853,7 +1043,11 @@ export function registerWorkItemTools(
     `,
     parameters: z.object({
       project: z.string().describe("Azure DevOps project name."),
-      iterationPath: z.string().describe("Project-level iteration path (e.g., 'ProjectName\\Iteration 1')."),
+      iterationPath: z
+        .string()
+        .describe(
+          "Project-level iteration path (e.g., 'ProjectName\\Iteration 1')."
+        ),
       startDate: z.string().optional().describe("Start date (YYYY-MM-DD)."),
       finishDate: z.string().optional().describe("Finish date (YYYY-MM-DD)."),
     }),
@@ -888,11 +1082,17 @@ export function registerWorkItemTools(
     parameters: z.object({
       project: z.string().describe("The name of the Azure DevOps project."),
       team: z.string().describe("The name of the team."),
-      iterationId: z.string().describe("The ID or path of the iteration/sprint."),
+      iterationId: z
+        .string()
+        .describe("The ID or path of the iteration/sprint."),
     }),
     async execute(args) {
       const { project, team, iterationId } = args;
-      const capacity = await workItemService.getTeamCapacity(project, team, iterationId);
+      const capacity = await workItemService.getTeamCapacity(
+        project,
+        team,
+        iterationId
+      );
       return JSON.stringify(formatTeamCapacity(capacity));
     },
   });
@@ -931,7 +1131,10 @@ export function registerWorkItemTools(
       id: z.number().describe("The numeric ID of the iteration node."),
     }),
     async execute({ project, id }) {
-      const node = await workItemService.getProjectIterationNodeById(project, id);
+      const node = await workItemService.getProjectIterationNodeById(
+        project,
+        id
+      );
       if (!node) return `Node not found for id ${id}`;
       return JSON.stringify({
         name: node.name,
