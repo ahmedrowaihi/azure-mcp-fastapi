@@ -1,19 +1,20 @@
 #!/usr/bin/env node
+import type { WebApi } from "azure-devops-node-api";
 import { createAzureConnection } from "./azure";
 import { provisionServices } from "./azure/services";
 import { createServer } from "./mcp";
 
-if (!process.env.AZURE_ORG_URL) {
-  throw new Error("AZURE_ORG_URL is not set");
-}
-if (!process.env.AZURE_PERSONAL_ACCESS_TOKEN) {
-  throw new Error("AZURE_PERSONAL_ACCESS_TOKEN is not set");
+let azureConnection: WebApi;
+if (!!process.env.AZURE_ORG_URL && !!process.env.AZURE_PERSONAL_ACCESS_TOKEN) {
+  azureConnection = createAzureConnection(
+    process.env.AZURE_ORG_URL!,
+    process.env.AZURE_PERSONAL_ACCESS_TOKEN!
+  );
+} else {
+  console.warn("AZURE_ORG_URL and AZURE_PERSONAL_ACCESS_TOKEN must be set");
+  azureConnection = {} as WebApi;
 }
 
-const azureConnection = createAzureConnection(
-  process.env.AZURE_ORG_URL!,
-  process.env.AZURE_PERSONAL_ACCESS_TOKEN!
-);
 const services = provisionServices(azureConnection);
 
 let server: ReturnType<typeof createServer> | undefined;
